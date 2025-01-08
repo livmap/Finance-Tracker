@@ -4,7 +4,7 @@ import Sidebar from "./components/Sidebar";
 export default function Home() {
 
   const sidebarItems = [
-    { href: "/dashboard", imgSrc: "/images/dashboard.svg", alt: "Dashboard" },
+    { href: "/", imgSrc: "/images/dashboard.svg", alt: "Dashboard" },
     { href: "/transactions", imgSrc: "/images/transactions.svg", alt: "Transactions" },
     { href: "/savings", imgSrc: "/images/savings.svg", alt: "Budget" },
     { href: "/investments", imgSrc: "/images/investments.svg", alt: "Reports" },
