@@ -16,7 +16,7 @@ export default function Sidebar({ logoSrc, items } : SidebarProps) {
     <aside className="h-screen w-20 flex flex-col items-center py-6">
       {/* Logo */}
       <div className="mb-10">
-        <img src={logoSrc} alt="Logo" className="w-12 h-12" />
+        <img src={logoSrc} alt="Logo" className="w-10 h-10" />
       </div>
 
       {/* Navigation Items */}

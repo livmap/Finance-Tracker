@@ -4,7 +4,7 @@ import Image from "next/image";
 import Sidebar from "./components/Sidebar";
 import PortfolioCard from "./components/PortfolioCard";
 import SavingsOverview from "./components/SavingsOverview";
-import AccountBalance from "./components/TransactionsTable";
+import AccountBalance from "./components/AccountBalance";
 import UpcomingBills from "./components/Upcoming Bills";
 import TransactionsTable from "./components/TransactionsTable";
 
@@ -21,12 +21,13 @@ function DashboardPage() {
     <div className="w-screen flex bg-background">
       <Sidebar logoSrc={"/images/logo_icon.svg"} items={sidebarItems} />
       <div className="flex-1 p-6 space-y-6">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h1 className="text-2xl font-bold">January</h1>
+        <AccountBalance />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <PortfolioCard />
           <SavingsOverview />
         </div>
-        <AccountBalance />
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <TransactionsTable />
           <UpcomingBills />
