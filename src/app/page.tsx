@@ -1,8 +1,14 @@
+"use client"
+
 import Image from "next/image";
 import Sidebar from "./components/Sidebar";
+import PortfolioCard from "./components/PortfolioCard";
+import SavingsOverview from "./components/SavingsOverview";
+import AccountBalance from "./components/TransactionsTable";
+import UpcomingBills from "./components/Upcoming Bills";
+import TransactionsTable from "./components/TransactionsTable";
 
-export default function Home() {
-
+function DashboardPage() {
   const sidebarItems = [
     { href: "/", imgSrc: "/images/dashboard.svg", alt: "Dashboard" },
     { href: "/transactions", imgSrc: "/images/transactions.svg", alt: "Transactions" },
@@ -12,8 +18,39 @@ export default function Home() {
   ];
 
   return (
-    <div className="w-screen h-screen flex flex-col">
+    <div className="w-screen flex bg-background">
       <Sidebar logoSrc={"/images/logo_icon.svg"} items={sidebarItems} />
+      <div className="flex-1 p-6 space-y-6">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <PortfolioCard />
+          <SavingsOverview />
+        </div>
+        <AccountBalance />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TransactionsTable />
+          <UpcomingBills />
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default DashboardPage;
+
+/*
+
+      <div className="flex-1 p-6 space-y-6 bg-gray-50">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <PortfolioCard />
+          <SavingsOverview />
+        </div>
+        <AccountBalance />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TransactionsTable />
+          <UpcomingBills />
+        </div>
+      </div>
+
+*/
