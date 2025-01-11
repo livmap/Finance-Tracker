@@ -15,6 +15,9 @@ export default {
         darkgreen: "#113900",
         lighterblue: "#001a60"
       },
+      spacing: {
+        '256': '48rem',
+      }
     },
   },
   plugins: [],

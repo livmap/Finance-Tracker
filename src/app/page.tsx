@@ -7,6 +7,7 @@ import SavingsOverview from "./components/SavingsOverview";
 import AccountBalance from "./components/AccountBalance";
 import UpcomingBills from "./components/Upcoming Bills";
 import TransactionsTable from "./components/TransactionsTable";
+import CreditCard from "./components/CreditCard";
 
 function DashboardPage() {
   const sidebarItems = [
@@ -22,7 +23,11 @@ function DashboardPage() {
       <Sidebar logoSrc={"/images/logo_icon.svg"} items={sidebarItems} />
       <div className="flex-1 p-6 space-y-6">
         <h1 className="text-2xl font-bold">January</h1>
+        <div className="dash-items flex justify-between">
+          <CreditCard />
         <AccountBalance />
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <PortfolioCard />
           <SavingsOverview />
