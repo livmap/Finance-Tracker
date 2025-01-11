@@ -65,7 +65,7 @@ function TransactionsTable() {
                   transaction.type === 'Expense' ? "text-red-500" : "text-green-500"
                 }`}
               >
-                ${Math.abs(transaction.amount).toLocaleString()}
+                R {Math.abs(transaction.amount).toLocaleString()}
               </td>
             </tr>
           ))}

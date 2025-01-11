@@ -18,14 +18,19 @@ interface SavingsTransaction {
   pocket: string;
   date: string;
   amount: number;
+  type: string
 }
 
 const Savings: React.FC = () => {
   const [savings, setSavings] = useState<SavingsPocket[]>([]);
   const [transactions, setTransactions] = useState<SavingsTransaction[]>([]);
   const [formVisible, setFormVisible] = useState(false);
+  const [addMoney, setAddMoney] = useState(false);
+  const [withdraw, setWithdraw] = useState(false);
   const [selectedPocket, setSelectedPocket] = useState("");
   const [amount, setAmount] = useState<number | "">(0);
+  const [newSaved, setNewSaved] = useState(0)
+  const [newCurrent, setNewCurrent] = useState(0)
 
   const [currentPage, setCurrentPage] = useState(1);
   const transactionsPerPage = 3;
@@ -52,7 +57,7 @@ const Savings: React.FC = () => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "savings_deposits"));
+        const querySnapshot = await getDocs(collection(db, "savings_transactions"));
         const fetchedTransactions: SavingsTransaction[] = querySnapshot.docs.map((doc) => ({
           ...doc.data(),
         })) as SavingsTransaction[];
@@ -65,6 +70,22 @@ const Savings: React.FC = () => {
     fetchTransactions();
   }, []);
 
+  const miniCheck = (a: number) => {
+    if(addMoney){
+      return increment(-a)
+    } else {
+      return increment(a)
+    }
+  }
+
+  const checkType = () => {
+    if(addMoney){
+      return 'Deposit'
+    } else {
+      return 'Withdrawal'
+    }
+  }
+
   const handleAddDeposit = async () => {
     if (selectedPocket && amount) {
       try {
@@ -75,19 +96,20 @@ const Savings: React.FC = () => {
           const selectedPocketDoc = updatedSavings[pocketIndex];
 
           // Update local state
-          updatedSavings[pocketIndex].saved += amount;
+          addMoney ? updatedSavings[pocketIndex].saved += amount : updatedSavings[pocketIndex].saved -= amount
 
           const newTransaction: SavingsTransaction = {
             pocket: selectedPocket,
             date: new Date().toISOString(),
-            amount,
+            amount: amount,
+            type: checkType()
           };
 
           setSavings(updatedSavings);
           setTransactions([...transactions, newTransaction]);
 
           // Save transaction to Firestore
-          await addDoc(collection(db, "savings_deposits"), newTransaction);
+          await addDoc(collection(db, "savings_transactions"), newTransaction);
 
           // Update the savings pocket in Firestore
           const pocketDocRef = doc(db, "Pockets", selectedPocketDoc.id);
@@ -99,7 +121,8 @@ const Savings: React.FC = () => {
                 const updateAmount = Number(amount.toFixed(2))
           
                 await updateDoc(accountsDocRef, {
-                  Savings: increment(updateAmount),
+                  Savings: miniCheck(-updateAmount),
+                  Current: miniCheck(updateAmount)
                 });
 
           // Reset form
@@ -111,6 +134,10 @@ const Savings: React.FC = () => {
         console.error("Error adding deposit:", error);
       }
     }
+
+    setAddMoney(false)
+    setWithdraw(false)
+
   };
 
   const PieChart = ({ pocket }: { pocket: SavingsPocket }) => {
@@ -183,13 +210,19 @@ const Savings: React.FC = () => {
 
         <div className="mt-8">
           <button
-            onClick={() => setFormVisible(true)}
-            className="px-4 py-2 bg-maingreen text-white rounded-lg"
+            onClick={() => setAddMoney(true)}
+            className="px-4 py-2 bg-maingreen text-white rounded-lg m-2"
           >
             Add Savings Deposit
           </button>
+          <button
+            onClick={() => setWithdraw(true)}
+            className="px-4 py-2 bg-maingreen text-white rounded-lg m-2"
+          >
+            Withdraw Funds
+          </button>
 
-          {formVisible && (
+          {(addMoney || withdraw) && (
             <div className="mt-4 p-4 rounded-lg shadow-md">
               <h3 className="font-bold text-lg mb-4">Add Deposit</h3>
               <div className="mb-4">
@@ -220,7 +253,7 @@ const Savings: React.FC = () => {
                 onClick={handleAddDeposit}
                 className="px-4 py-2 bg-maingreen text-white rounded-lg"
               >
-                Add Deposit
+                {addMoney ? 'Add Deposit' : 'Withdraw'}
               </button>
             </div>
           )}
@@ -241,7 +274,7 @@ const Savings: React.FC = () => {
                 <tr key={index} className="hover:bg-lighterblue">
                   <td className="p-4">{transaction.pocket}</td>
                   <td className="p-4">{new Date(transaction.date).toLocaleDateString()}</td>
-                  <td className="p-4">R{transaction.amount}</td>
+                  <td className={`p-4 ${transaction.type === 'Deposit' ? 'text-green-500' : 'text-red-500'}`}>R {transaction.amount}</td>
                 </tr>
               ))}
             </tbody>
