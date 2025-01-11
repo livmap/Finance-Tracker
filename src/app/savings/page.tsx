@@ -1,64 +1,120 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { collection, getDocs, addDoc, updateDoc, doc, increment } from "firebase/firestore";
+import { db } from "../../../firebase/firebaseConfig"; // Adjust the path as needed
 import * as d3 from "d3";
 import Sidebar from "../components/Sidebar";
 
 interface SavingsPocket {
-  id: number;
+  id: string; // Firestore document ID
   name: string;
   color: string;
-  goal: number;
-  current: number;
+  target: number;
+  saved: number;
 }
 
 interface SavingsTransaction {
-  pocketName: string;
+  pocket: string;
   date: string;
   amount: number;
 }
 
 const Savings: React.FC = () => {
-  const [savings, setSavings] = useState<SavingsPocket[]>([
-    { id: 1, name: "Emergency Fund", color: "limegreen", goal: 1000, current: 300 },
-    { id: 2, name: "Vacation Fund", color: "magenta", goal: 2000, current: 800 },
-    { id: 3, name: "New Car Fund", color: "orange", goal: 5000, current: 1500 },
-  ]);
-
+  const [savings, setSavings] = useState<SavingsPocket[]>([]);
   const [transactions, setTransactions] = useState<SavingsTransaction[]>([]);
   const [formVisible, setFormVisible] = useState(false);
   const [selectedPocket, setSelectedPocket] = useState("");
   const [amount, setAmount] = useState<number | "">(0);
 
-  const [currentPage, setCurrentPage] = useState(1); // Track the current page
+  const [currentPage, setCurrentPage] = useState(1);
   const transactionsPerPage = 3;
 
-  const handleAddDeposit = () => {
+  // Fetch savings pockets from Firestore
+  useEffect(() => {
+    const fetchSavingsPockets = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "Pockets"));
+        const pockets: SavingsPocket[] = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as SavingsPocket[];
+        setSavings(pockets);
+      } catch (error) {
+        console.error("Error fetching savings pockets:", error);
+      }
+    };
+
+    fetchSavingsPockets();
+  }, []);
+
+  // Fetch savings transactions from Firestore
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "savings_deposits"));
+        const fetchedTransactions: SavingsTransaction[] = querySnapshot.docs.map((doc) => ({
+          ...doc.data(),
+        })) as SavingsTransaction[];
+        setTransactions(fetchedTransactions);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
+  const handleAddDeposit = async () => {
     if (selectedPocket && amount) {
-      const pocketIndex = savings.findIndex((pocket) => pocket.name === selectedPocket);
+      try {
+        const pocketIndex = savings.findIndex((pocket) => pocket.name === selectedPocket);
 
-      if (pocketIndex !== -1) {
-        const updatedSavings = [...savings];
-        updatedSavings[pocketIndex].current += amount;
+        if (pocketIndex !== -1) {
+          const updatedSavings = [...savings];
+          const selectedPocketDoc = updatedSavings[pocketIndex];
 
-        const newTransaction: SavingsTransaction = {
-          pocketName: selectedPocket,
-          date: new Date().toISOString(), // Use ISO format for easy sorting
-          amount,
-        };
+          // Update local state
+          updatedSavings[pocketIndex].saved += amount;
 
-        setSavings(updatedSavings);
-        setTransactions([...transactions, newTransaction]);
+          const newTransaction: SavingsTransaction = {
+            pocket: selectedPocket,
+            date: new Date().toISOString(),
+            amount,
+          };
 
-        setSelectedPocket("");
-        setAmount("");
-        setFormVisible(false);
+          setSavings(updatedSavings);
+          setTransactions([...transactions, newTransaction]);
+
+          // Save transaction to Firestore
+          await addDoc(collection(db, "savings_deposits"), newTransaction);
+
+          // Update the savings pocket in Firestore
+          const pocketDocRef = doc(db, "Pockets", selectedPocketDoc.id);
+          await updateDoc(pocketDocRef, {
+            saved: selectedPocketDoc.saved,
+          });
+
+          const accountsDocRef = doc(db, "Accounts", "p7YAMEcZnj8ju2ny296N"); // "Account ID"
+                const updateAmount = Number(amount.toFixed(2))
+          
+                await updateDoc(accountsDocRef, {
+                  Savings: increment(updateAmount),
+                });
+
+          // Reset form
+          setSelectedPocket("");
+          setAmount("");
+          setFormVisible(false);
+        }
+      } catch (error) {
+        console.error("Error adding deposit:", error);
       }
     }
   };
 
   const PieChart = ({ pocket }: { pocket: SavingsPocket }) => {
-    const percentage = Math.min((pocket.current / pocket.goal) * 100, 100);
+    const percentage = pocket.target > 0 ? Math.min((pocket.saved / pocket.target) * 100, 100) : 0;
 
     const pieData = d3.pie<number>()([percentage, 100 - percentage]);
 
@@ -93,7 +149,6 @@ const Savings: React.FC = () => {
     { href: "/setup", imgSrc: "/images/setup.svg", alt: "Settings" },
   ];
 
-  // Calculate pagination
   const totalTransactions = transactions.length;
   const totalPages = Math.ceil(totalTransactions / transactionsPerPage);
   const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -108,7 +163,6 @@ const Savings: React.FC = () => {
       <div className="w-full p-4">
         <h1 className="text-2xl font-bold mb-4">Savings</h1>
 
-        {/* Savings Pockets */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {savings.map((pocket) => (
             <div
@@ -117,17 +171,16 @@ const Savings: React.FC = () => {
             >
               <h2 className="font-bold text-lg mb-2">{pocket.name}</h2>
               <PieChart pocket={pocket} />
-              <p className="mt-4 text-gray-700">
-                <span className="font-bold">Goal:</span> R{pocket.goal}
+              <p className="mt-4 text-white">
+                <span className="font-bold">Goal:</span> R {pocket.target}
               </p>
-              <p className="text-gray-700">
-                <span className="font-bold">Current:</span> R{pocket.current}
+              <p className="text-white">
+                <span className="font-bold">Current:</span> R {pocket.saved}
               </p>
             </div>
           ))}
         </div>
 
-        {/* Add Savings Deposit */}
         <div className="mt-8">
           <button
             onClick={() => setFormVisible(true)}
@@ -173,7 +226,6 @@ const Savings: React.FC = () => {
           )}
         </div>
 
-        {/* Transactions Table */}
         <div className="mt-8">
           <h3 className="font-bold text-lg mb-4">Transactions</h3>
           <table className="w-full shadow-md rounded-lg overflow-hidden">
@@ -187,15 +239,13 @@ const Savings: React.FC = () => {
             <tbody>
               {displayedTransactions.map((transaction, index) => (
                 <tr key={index} className="hover:bg-lighterblue">
-                  <td className="p-4">{transaction.pocketName}</td>
+                  <td className="p-4">{transaction.pocket}</td>
                   <td className="p-4">{new Date(transaction.date).toLocaleDateString()}</td>
                   <td className="p-4">R{transaction.amount}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-
-          {/* Pagination Controls */}
           <div className="mt-4 flex justify-center space-x-4">
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -222,3 +272,4 @@ const Savings: React.FC = () => {
 };
 
 export default Savings;
+

@@ -16,6 +16,7 @@ function DashboardPage() {
   const [currentAmount, setCurrentAmount] = useState(0);
   const [savingsAmount, setSavingsAmount] = useState(0);
   const [investmentAmount, setInvestmentAmount] = useState(0);
+  const [savingsPockets, setSavingsPockets] = useState<any>([]); // State to store savings pockets
 
   const sidebarItems = [
     { href: "/", imgSrc: "/images/dashboard.svg", alt: "Dashboard" },
@@ -25,6 +26,7 @@ function DashboardPage() {
     { href: "/setup", imgSrc: "/images/setup.svg", alt: "Settings" },
   ];
 
+  // Fetch account data from Firestore
   useEffect(() => {
     const fetchAccountData = async () => {
       try {
@@ -51,6 +53,24 @@ function DashboardPage() {
     fetchAccountData();
   }, []);
 
+  // Fetch savings pockets data from Firestore
+  useEffect(() => {
+    const fetchSavingsPockets = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "Pockets"));
+        const pockets = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setSavingsPockets(pockets); // Set savings pockets data
+      } catch (error) {
+        console.error("Error fetching savings pockets:", error);
+      }
+    };
+
+    fetchSavingsPockets();
+  }, []);
+
   return (
     <div className="w-screen flex bg-background">
       <Sidebar logoSrc={"/images/logo_icon.svg"} items={sidebarItems} />
@@ -65,7 +85,7 @@ function DashboardPage() {
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <PortfolioCard />
-          <SavingsOverview />
+          <SavingsOverview savingsPockets={savingsPockets} /> {/* Pass savings data to SavingsOverview */}
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -77,4 +97,4 @@ function DashboardPage() {
   );
 }
 
-export default DashboardPage
+export default DashboardPage;

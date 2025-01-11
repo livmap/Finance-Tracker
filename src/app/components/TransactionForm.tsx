@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { collection, addDoc } from "firebase/firestore"; // Import Firestore functions
-import { db } from "../../../firebase/firebaseConfig"
+import { collection, addDoc, doc, updateDoc, increment } from "firebase/firestore"; // Import Firestore functions
+import { db } from "../../../firebase/firebaseConfig";
 
 interface Transaction {
   date: string;
@@ -45,6 +45,16 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction }) =
       // Add the transaction to the Firestore database
       const docRef = await addDoc(collection(db, "transactions"), formData);
       console.log("Transaction added with ID:", docRef.id);
+
+      // Update the "Current" field in the "Accounts" collection
+      const accountsDocRef = doc(db, "Accounts", "p7YAMEcZnj8ju2ny296N"); // "Account ID"
+      const updateAmount = formData.type === "Income" ? formData.amount : -formData.amount;
+
+      await updateDoc(accountsDocRef, {
+        Current: increment(updateAmount),
+      });
+
+      console.log(`Account updated. ${formData.type} of ${formData.amount} applied to 'Current'.`);
 
       // Optionally call the parent callback
       if (onAddTransaction) {
