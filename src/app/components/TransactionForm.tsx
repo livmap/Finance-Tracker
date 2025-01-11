@@ -1,6 +1,8 @@
-"use client"
+"use client";
 
 import React, { useState } from "react";
+import { collection, addDoc } from "firebase/firestore"; // Import Firestore functions
+import { db } from "../../../firebase/firebaseConfig"
 
 interface Transaction {
   date: string;
@@ -12,7 +14,7 @@ interface Transaction {
 }
 
 interface TransactionFormProps {
-  onAddTransaction: (transaction: Transaction) => void;
+  onAddTransaction?: (transaction: Transaction) => void; // Optional callback for additional functionality
 }
 
 const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction }) => {
@@ -25,6 +27,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction }) =
     notes: "",
   });
 
+  const [isLoading, setIsLoading] = useState(false); // To manage loading state
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({
@@ -33,10 +37,27 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction }) =
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onAddTransaction(formData);
-    setFormData({ date: "", name: "", type: "Income", amount: 0, payMethod: "", notes: "" });
+    setIsLoading(true);
+
+    try {
+      // Add the transaction to the Firestore database
+      const docRef = await addDoc(collection(db, "transactions"), formData);
+      console.log("Transaction added with ID:", docRef.id);
+
+      // Optionally call the parent callback
+      if (onAddTransaction) {
+        onAddTransaction(formData);
+      }
+
+      // Reset form
+      setFormData({ date: "", name: "", type: "Income", amount: 0, payMethod: "", notes: "" });
+    } catch (error) {
+      console.error("Error adding transaction:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -100,8 +121,12 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction }) =
           className="bg-lighterblue p-2 rounded w-full"
         />
       </div>
-      <button type="submit" className="bg-maingreen text-white py-2 px-4 rounded">
-        Add Transaction
+      <button
+        type="submit"
+        className={`bg-maingreen text-white py-2 px-4 rounded ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+        disabled={isLoading}
+      >
+        {isLoading ? "Adding..." : "Add Transaction"}
       </button>
     </form>
   );

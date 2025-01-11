@@ -1,9 +1,11 @@
-"use client"
+"use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { db } from "../../../firebase/firebaseConfig"; // Import your Firebase configuration
+import { collection, getDocs } from "firebase/firestore"; // Import Firestore functions
 
 interface Transaction {
-  date: string;
+  date: string; // Expected in "YYYY-MM-DD" format
   name: string;
   type: "Income" | "Expense";
   amount: number;
@@ -11,19 +13,39 @@ interface Transaction {
   notes: string;
 }
 
-interface TransactionTableProps {
-  transactions: Transaction[];
-}
-
-const TransactionTable: React.FC<TransactionTableProps> = ({ transactions }) => {
+const TransactionTable: React.FC = () => {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [loading, setLoading] = useState(true);
 
   const totalPages = Math.ceil(transactions.length / itemsPerPage);
   const currentTransactions = transactions.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "transactions"));
+        let fetchedTransactions = querySnapshot.docs.map((doc) => doc.data() as Transaction);
+
+        // Sort transactions by date (latest to oldest)
+        fetchedTransactions = fetchedTransactions.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+        setTransactions(fetchedTransactions);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
@@ -32,6 +54,10 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions }) => 
   const handlePrevPage = () => {
     if (currentPage > 1) setCurrentPage((prev) => prev - 1);
   };
+
+  if (loading) {
+    return <p>Loading transactions...</p>;
+  }
 
   return (
     <div className="overflow-x-auto shadow rounded">
@@ -47,16 +73,24 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions }) => 
           </tr>
         </thead>
         <tbody>
-          {currentTransactions.map((transaction, index) => (
-            <tr key={index} className="hover:bg-lighterblue">
-              <td className="p-2">{transaction.date}</td>
-              <td className="p-2">{transaction.name}</td>
-              <td className="p-2">{transaction.type}</td>
-              <td className="p-2">R {transaction.amount.toFixed(2)}</td>
-              <td className="p-2">{transaction.payMethod}</td>
-              <td className="p-2">{transaction.notes}</td>
+          {currentTransactions.length === 0 ? (
+            <tr>
+              <td colSpan={6} className="text-center py-4">
+                No transactions found.
+              </td>
             </tr>
-          ))}
+          ) : (
+            currentTransactions.map((transaction, index) => (
+              <tr key={index} className="hover:bg-lighterblue">
+                <td className="p-2">{transaction.date}</td>
+                <td className="p-2">{transaction.name}</td>
+                <td className="p-2">{transaction.type}</td>
+                <td className="p-2">R {transaction.amount.toFixed(2)}</td>
+                <td className="p-2">{transaction.payMethod}</td>
+                <td className="p-2">{transaction.notes}</td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
       <div className="flex justify-between p-4">

@@ -2,8 +2,12 @@
 
 import React from "react";
 
-const CreditCard: React.FC = () => {
-  const accountBalance = "R12,345.67";
+interface Card {
+  amount: Number
+}
+
+function CreditCard({ amount }: Card){
+  const accountBalance = amount.toString();
   const cardHolderName = "Prince Maphupha";
   const bankName = "NEDBANK";
 
@@ -25,7 +29,7 @@ const CreditCard: React.FC = () => {
       {/* Account Balance */}
       <div className="mt-8">
         <p className="text-sm font-medium opacity-80">Account Balance</p>
-        <h2 className="text-2xl font-bold">{accountBalance}</h2>
+        <h2 className="text-2xl font-bold">R {accountBalance}</h2>
       </div>
 
       {/* Card Holder Name */}
