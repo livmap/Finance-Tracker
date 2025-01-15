@@ -31,7 +31,7 @@ const InvTransactionsTable: React.FC<InvTransactionsTableProps> = ({ data }) => 
         </thead>
         <tbody>
           {data.map((item, index) => (
-            <tr key={index} className={`bg-background border-t`}>
+            <tr key={index} className={`bg-background border-t hover:bg-lighterblue`}>
               <td className="px-4 py-2 text-left">{item.date}</td>
               <td className="px-4 py-2 text-left">{item.securityName}</td>
               <td className="px-4 py-2 text-left">{item.ticker}</td>

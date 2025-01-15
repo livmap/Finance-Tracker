@@ -5,7 +5,7 @@ import { collection, getDocs } from "firebase/firestore";
 interface Portfolio {
   securityName: string;
   type: string;
-  ticker:string
+  ticker: string;
   totalInvested: number;
   shares: number;
 }
@@ -29,16 +29,45 @@ const PortfolioTable: React.FC = () => {
             type: data.securityType, // Adjust if your field is named differently
             totalInvested: data.totalInvested,
             shares: data.shares,
-            ticker: data.ticker
+            ticker: data.ticker,
           };
         });
 
         setPortfolioData(portfolioList);
         setLoading(false);
+
+        // Fetch and log stock prices for Shoprite and Discovery
+        await fetchStockPrices(["SHP", "DSY.JO"]); // Replace with correct ticker symbols for Shoprite and Discovery
       } catch (error) {
         console.error("Error fetching portfolio data: ", error);
         setLoading(false);
       }
+    };
+
+    const fetchStockPrices = async (tickers: string[]) => {
+      const apiKey = "5QXOREFEA3X802G6"; // Replace with your Alpha Vantage API key
+      const prices: Record<string, number> = {};
+
+      for (const ticker of tickers) {
+        try {
+          const response = await fetch(
+            `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${apiKey}`
+          );
+          const data = await response.json();
+
+          if (data["Global Quote"]) {
+            const price = parseFloat(data["Global Quote"]["05. price"]);
+            prices[ticker] = price;
+            console.log(`Price for ${ticker}: R${price}`);
+          } else {
+            console.warn(`No price data found for ${ticker}`);
+          }
+        } catch (error) {
+          console.error(`Error fetching price for ${ticker}:`, error);
+        }
+      }
+
+      console.log("Fetched prices:", prices);
     };
 
     fetchPortfolioData();
@@ -64,11 +93,11 @@ const PortfolioTable: React.FC = () => {
         </thead>
         <tbody>
           {portfolioData.map((item, index) => (
-            <tr key={index} className="border-t bg-background">
+            <tr key={index} className="border-t bg-background hover:bg-lighterblue">
               <td className="px-4 py-2">{item.securityName}</td>
               <td className="px-4 py-2">{item.type}</td>
-              <td className="px-4 py-2 text-right">${item.totalInvested.toFixed(2)}</td>
-              <td className="px-4 py-2 text-right">${0}</td>
+              <td className="px-4 py-2 text-right">R {item.totalInvested.toFixed(2)}</td>
+              <td className="px-4 py-2 text-right">R {0}</td>
               <td className="px-4 py-2 text-right">{item.shares}</td>
               <td className="px-4 py-2 text-right">{0}%</td>
             </tr>

@@ -56,7 +56,7 @@ const TransactionTable: React.FC = () => {
   };
 
   if (loading) {
-    return <p>Loading transactions...</p>;
+    return <p className="text-white">Loading transactions...</p>;
   }
 
   return (
@@ -64,30 +64,30 @@ const TransactionTable: React.FC = () => {
       <table className="w-full text-left border-collapse">
         <thead className="bg-darkgreen">
           <tr>
-            <th className="p-2">Date</th>
-            <th className="p-2">Name</th>
-            <th className="p-2">Type</th>
-            <th className="p-2">Amount</th>
-            <th className="p-2">Pay Method</th>
-            <th className="p-2">Notes</th>
+            <th className="p-2 text-white">Date</th>
+            <th className="p-2 text-white">Name</th>
+            <th className="p-2 text-white">Type</th>
+            <th className="p-2 text-white">Amount</th>
+            <th className="p-2 text-white">Pay Method</th>
+            <th className="p-2 text-white">Notes</th>
           </tr>
         </thead>
         <tbody>
           {currentTransactions.length === 0 ? (
             <tr>
-              <td colSpan={6} className="text-center py-4">
+              <td colSpan={6} className="text-center text-white py-4">
                 No transactions found.
               </td>
             </tr>
           ) : (
             currentTransactions.map((transaction, index) => (
               <tr key={index} className="hover:bg-lighterblue">
-                <td className="p-2">{transaction.date}</td>
-                <td className="p-2">{transaction.name}</td>
-                <td className="p-2">{transaction.type}</td>
-                <td className="p-2">R {transaction.amount.toFixed(2)}</td>
-                <td className="p-2">{transaction.payMethod}</td>
-                <td className="p-2">{transaction.notes}</td>
+                <td className="p-2 text-white">{transaction.date}</td>
+                <td className="p-2 text-white">{transaction.name}</td>
+                <td className="p-2 text-white">{transaction.type}</td>
+                <td className="p-2 text-white">R {transaction.amount.toFixed(2)}</td>
+                <td className="p-2 text-white">{transaction.payMethod}</td>
+                <td className="p-2 text-white">{transaction.notes}</td>
               </tr>
             ))
           )}
