@@ -39,7 +39,7 @@ const BillsTable: React.FC = () => {
       <h2 className="text-xl font-bold mb-4">Bills Table</h2>
       <button
         onClick={() => setShowForm(true)}
-        className="bg-darkgreen text-white px-4 py-2 rounded-md hover:bg-blue-600 mb-4"
+        className="bg-maingreen text-white px-4 py-2 rounded-md hover:bg-darkgreen mb-4"
       >
         Add Bill
       </button>

@@ -8,9 +8,9 @@ interface Transaction {
   date: string; // Expected in "YYYY-MM-DD" format
   name: string;
   type: "Income" | "Expense";
+  category: string; // New category field
   amount: number;
   payMethod: string;
-  notes: string;
 }
 
 const TransactionTable: React.FC = () => {
@@ -67,9 +67,9 @@ const TransactionTable: React.FC = () => {
             <th className="p-2 text-white">Date</th>
             <th className="p-2 text-white">Name</th>
             <th className="p-2 text-white">Type</th>
+            <th className="p-2 text-white">Category</th> {/* New column */}
             <th className="p-2 text-white">Amount</th>
             <th className="p-2 text-white">Pay Method</th>
-            <th className="p-2 text-white">Notes</th>
           </tr>
         </thead>
         <tbody>
@@ -85,9 +85,9 @@ const TransactionTable: React.FC = () => {
                 <td className="p-2 text-white">{transaction.date}</td>
                 <td className="p-2 text-white">{transaction.name}</td>
                 <td className="p-2 text-white">{transaction.type}</td>
+                <td className="p-2 text-white">{transaction.category}</td> {/* New column */}
                 <td className="p-2 text-white">R {transaction.amount.toFixed(2)}</td>
                 <td className="p-2 text-white">{transaction.payMethod}</td>
-                <td className="p-2 text-white">{transaction.notes}</td>
               </tr>
             ))
           )}

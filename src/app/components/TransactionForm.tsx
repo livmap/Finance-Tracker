@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
-import { collection, addDoc, doc, updateDoc, increment } from "firebase/firestore"; // Import Firestore functions
+import React, { useState, useEffect } from "react";
+import { collection, addDoc, doc, updateDoc, increment, getDocs } from "firebase/firestore"; // Import Firestore functions
 import { db } from "../../../firebase/firebaseConfig";
 
 interface Transaction {
   date: string;
   name: string;
   type: "Income" | "Expense";
+  category: string;
   amount: number;
   payMethod: string;
-  notes: string;
 }
 
 interface TransactionFormProps {
@@ -22,12 +22,27 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction }) =
     date: "",
     name: "",
     type: "Income",
+    category: "",
     amount: 0,
     payMethod: "",
-    notes: "",
   });
 
+  const [categories, setCategories] = useState<string[]>([]); // State to store categories
   const [isLoading, setIsLoading] = useState(false); // To manage loading state
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "categories"));
+        const fetchedCategories = querySnapshot.docs.map((doc) => doc.data().category);
+        setCategories(fetchedCategories);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -62,7 +77,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction }) =
       }
 
       // Reset form
-      setFormData({ date: "", name: "", type: "Income", amount: 0, payMethod: "", notes: "" });
+      setFormData({ date: "", name: "", type: "Income", category: "", amount: 0, payMethod: "" });
     } catch (error) {
       console.error("Error adding transaction:", error);
     } finally {
@@ -102,6 +117,24 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction }) =
           <option value="Income">Income</option>
           <option value="Expense">Expense</option>
         </select>
+        <select
+          name="category"
+          value={formData.category}
+          onChange={handleChange}
+          className="bg-lighterblue p-2 rounded w-full"
+          required
+        >
+          <option value="" disabled>
+            Select Category
+          </option>
+          {categories.map((category, index) => (
+            <option key={index} value={category}>
+              {category}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
         <input
           type="number"
           name="amount"
@@ -111,8 +144,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction }) =
           className="bg-lighterblue p-2 rounded w-full"
           required
         />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
         <input
           type="text"
           name="payMethod"
@@ -121,14 +152,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction }) =
           placeholder="Payment Method"
           className="bg-lighterblue p-2 rounded w-full"
           required
-        />
-        <input
-          type="text"
-          name="notes"
-          value={formData.notes}
-          onChange={handleChange}
-          placeholder="Notes"
-          className="bg-lighterblue p-2 rounded w-full"
         />
       </div>
       <button
